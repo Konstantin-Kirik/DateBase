@@ -1,6 +1,7 @@
 package Console;
 
 import Connection.ConnectionDB;
+import Person.BusCar;
 import Person.Car;
 import Person.PersonCar;
 
@@ -13,49 +14,66 @@ import java.util.Scanner;
 
 public class Method {
 
-    private static final String SELECTTWO = "select surname, personcar.name, patronymic, registration, passport, marka, model, color, car.type , platen_number  from personcar \n" +
+    private static final String SELECTTWO = "select surname, personcar.name, patronymic, registration, passport, bus_id, marka, model, color, car.type , platen_number  from personcar \n" +
             "\t\t\t\tleft join car on personcar.car_id = car.id\n" +
             "union\n" +
-            "select surname, personcar.name, patronymic, registration, passport, marka, model, color, car.type , platen_number from personcar \n" +
+            "select surname, personcar.name, patronymic, registration, passport, bus_id, marka, model, color, car.type , platen_number from personcar \n" +
             "\t\t\t\tinner join car on personcar.car_id = car.id\n" +
             "                 WHERE personcar.id is null;";
 
-    private static final String SELECT = "select * from personcar \n" +
-            "\t\t\t\tinner join car on personcar.car_id = car.id;";
+    private static final String SELECT = "select surname, personcar.name, patronymic, registration, passport, bus_id,\n" +
+            "car.marka, car.model, car.color, car.type , car.platen_number, \n" +
+            "buscar.marka, buscar.model, buscar.color, buscar.type , buscar.platen_number, seats  from personcar \n" +
+            "\t\t\t\tinner join car on personcar.car_id = car.id\n" +
+            "\t\t        left join buscar on personcar.bus_id = buscar.id;";
+
     private static final String UPDATEPERSON = "insert into personcar (id, surname, name, patronymic, registration, passport, car_id) value(?,?,?,?,?,?,?)";
     private static final String UPDATECAR = "insert into car (id, platen_number, marka, model, color, type) value(?,?,?,?,?,?)";
     private static final String UPDATELAST = "SELECT id FROM car ORDER BY id DESC LIMIT 1";
     private static final String DELETE = "DELETE personcar, car FROM personcar INNER JOIN car ON personcar.car_id = car.id WHERE personcar.surname = ?";
     private static final String UPCHANGING = "update personcar set registration = ? where surname = ? ";
+    private static final String SELECTBUS = "select marka, model, color, buscar.type , platen_number, seats from buscar";
 
     public void select() {
         try {
             ConnectionDB connectionDB = new ConnectionDB();
             Statement statement = connectionDB.getConnection().createStatement();
-            ResultSet resultSet = statement.executeQuery(SELECTTWO);
-
+            ResultSet resultSet = statement.executeQuery(SELECT);
             while (resultSet.next()) {
-
                 PersonCar personCar = new PersonCar();
                 Car car = new Car();
+                BusCar busCar = new BusCar();
                 personCar.setSurname(resultSet.getString("surname"));
                 personCar.setName(resultSet.getString("name"));
                 personCar.setPatronymic(resultSet.getString("patronymic"));
                 personCar.setRegistration(resultSet.getString("registration"));
                 personCar.setPassport(resultSet.getString("passport"));
-                car.setMarka(resultSet.getString("marka"));
-                car.setModel(resultSet.getString("model"));
-                car.setColor(resultSet.getString("color"));
-                car.setType(resultSet.getString("type"));
-                car.setPlaten_number(resultSet.getString("platen_number"));
+                personCar.setIndexBus(resultSet.getInt("bus_id"));
+
+                busCar.setMarka(resultSet.getString("buscar.marka"));
+                busCar.setModel(resultSet.getString("buscar.model"));
+                busCar.setColor(resultSet.getString("buscar.color"));
+                busCar.setType(resultSet.getString("buscar.type"));
+                busCar.setPlaten_number(resultSet.getString("buscar.platen_number"));
+                busCar.setSeats(resultSet.getInt("seats"));
+
+                car.setMarka(resultSet.getString("car.marka"));
+                car.setModel(resultSet.getString("car.model"));
+                car.setColor(resultSet.getString("car.color"));
+                car.setType(resultSet.getString("car.type"));
+                car.setPlaten_number(resultSet.getString("car.platen_number"));
+
                 System.out.println(personCar);
                 System.out.println(car);
+                if (personCar.getIndexBus()!=0){
+                    System.out.println(busCar);
+                }
                 System.out.println();
 
             }
-
             statement.close();
             resultSet.close();
+
         } catch (SQLException | ClassNotFoundException throwables) {
             throwables.printStackTrace();
         }
